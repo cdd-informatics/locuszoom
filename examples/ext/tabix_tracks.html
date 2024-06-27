@@ -196,7 +196,8 @@
       const data_sources = new LocusZoom.DataSources()
           .add("assoc", ["TabixUrlSource", {
               // Courtesy of https://www.ncbi.nlm.nih.gov/pubmed/25673413  - As harmonized in https://my.locuszoom.org/gwas/236887/
-              url_data:  'https://locuszoom-web-demos.s3.us-east-2.amazonaws.com/tabix-demo/gwas_giant-bmi_meta_women-only.gz',
+              // url_data:  'https://locuszoom-web-demos.s3.us-east-2.amazonaws.com/tabix-demo/gwas_giant-bmi_meta_women-only.gz',
+              url_data:  'https://locuszoom.s3.us-west-1.amazonaws.com/BDNF.gz',
               parser_func: gwasParser,
               overfetch: 0,
           }])

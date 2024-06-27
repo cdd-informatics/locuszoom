@@ -12,6 +12,9 @@
   <link rel="stylesheet" href="../dist/locuszoom.css" type="text/css"/>
 
   <script type="application/javascript" src="../dist/ext/lz-dynamic-urls.min.js"></script>
+  <script type="application/javascript" src="../dist/ext/lz-tabix-source.min.js"></script>
+  <script type="application/javascript" src="../../dist/ext/lz-parsers.min.js"></script>
+    <script type="application/javascript" src="../../dist/ext/lz-intervals-track.min.js"></script>
 
   <title>LocusZoom.js ~ GWAS Catalog</title>
 
@@ -44,23 +47,6 @@
   <hr style="clear: both;">
 
   <p>
-    It can be helpful to view an association plot in context of all previously reported claims about an association,
-    across all traits and studies. LocusZoom is able to mark SNPs that have been previously reported in any of several
-    GWAS catalogs, including the NHGRI-EBI GWAS catalog (build 37) used in this demonstration.
-  </p>
-
-  <p>
-    Significant association SNPs with entries in the catalog can be marked with labels on the association plot, a separate
-    annotation "rug" track, or both. In the case where the GWAS Catalog contains multiple reports about a single SNP,
-    all entries are matched by chromosome and position, and the trait with the most significant pvalue is reported.
-    The rug track provides more detailed contextual information.
-  </p>
-  <p>
-    In this demonstration, trait labels can be toggled for GWAS Catalog SNPs within LD > 0.4 of the reference variant.
-    To begin, move your mouse over the association results plot below and select "Display Options".
-  </p>
-
-  <p>
     <a href="https://github.com/statgen/locuszoom/blob/master/examples/gwas_catalog.html">View source code</a>
   </p>
 
@@ -87,9 +73,35 @@
       /*
         Specify the data sources to use
        */
+
+      const gwasParser = LzParsers.makeGWASParser({
+          // 1-based column indices. The values below match the harmonized format output by my.locuszoom.org
+          chrom_col: 1,
+          pos_col: 2,
+          ref_col: 4,
+          alt_col: 5,
+          pvalue_col: 6,
+          is_neg_log_pvalue: true,
+          beta_col: 7,
+          stderr_beta_col: 8
+      });
+
       var apiBase = "//portaldev.sph.umich.edu/api/v1/";
       var data_sources = new LocusZoom.DataSources()
-          .add("assoc", ["AssociationLZ", { url: apiBase + "statistic/single/", source: 45 }])
+          .add("assoc", ["TabixUrlSource", {
+            // Corresponds to: https://www.diabetesepigenome.org/files/DFF044MQE/
+            //   as processed from https://www.diabetesepigenome.org/annotations/DSR299XDW/
+            // Islet of Langerhans / Chicago analysis, from CROCPOT
+            // url_data: 'https://locuszoom.s3-us-west-2.amazonaws.com/DFF044MQE_sorted.bed.gz',
+            url_data: 'https://locuszoom.s3.us-west-1.amazonaws.com/BDNF.gz',
+            // url_data: 'https://s3-bucket.example/tabix-indexed-bgzip-file.gz',
+            // parser_func: dega_bed_parser,
+            // parser_func: (line_of_text) => object_of_parsed_data_for_this_line,
+            parser_func: gwasParser,
+            // We are fetching two elements, but only one of them is captured in the tabix index.
+            // Fetching 25% extra data on each side can ensure that things near the edge are returned when we query.
+            overfetch: 0.05,
+          }])
           .add("ld", ["LDServer", { url: "https://portaldev.sph.umich.edu/ld/", source: '1000G', population: 'ALL' }])
           .add("gene", ["GeneLZ", { url: apiBase + "annotation/genes/" }])
           .add("catalog", ["GwasCatalogLZ", { url: apiBase + 'annotation/gwascatalog/results/' }])

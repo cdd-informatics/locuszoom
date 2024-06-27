@@ -37,27 +37,6 @@
 
   <h1 style="margin-top: 1em;"><strong>LocusZoom.js</strong></h1>
 
-  <h3 style="float: left; color: #777">Chromatin Co-accessibility</h3>
-  <h6 style="float: right;"><a href="../index.html">&lt; return home</a></h6>
-
-  <hr style="clear: both;">
-  <p>
-    A LocusZoom extension track for interactively visualizing single-cell chromatin co-accessibility links
-    & scores of sites in genome to predict cis-regulatory interactions.
-  </p>
-
-  <p>
-    Data from: Rai, V. et al. Single-cell ATAC-Seq in human pancreatic islets and deep learning upscaling of rare cells reveals cell-specific type 2 diabetes regulatory signatures. Mol Metab 32, 109-121 (2020). (PMID <a href="https://pubmed.ncbi.nlm.nih.gov/32029221/">32029221</a>)
-  </p>
-
-  <p>
-    This demonstration shows how to read annotations directly from an external BED track (tabix indexed), without
-    needing to convert the data into JSON or load via a remote API. The remote file server must enable some basic
-    headers. (see <a
-      href="See: https://docs.cancergenomicscloud.org/docs/enabling-cross-origin-resource-sharing-cors#CORS">instructions
-    for google cloud and s3 buckets</a>)
-  </p>
-
   <p>
     <a href="https://github.com/statgen/locuszoom/blob/master/examples/coaccessibility.html">View source code</a>
   </p>
@@ -79,19 +58,22 @@
     data_sources = new LocusZoom.DataSources()
         .add("assoc", ["AssociationLZ", {url: apiBase + "statistic/single/", source: 45 }])
         .add("ld", ["LDServer", { url: "https://portaldev.sph.umich.edu/ld/", source: '1000G', build: 'GRCh37', population: 'ALL' }])
-        .add("recomb", ["RecombLZ", { url: apiBase + "annotation/recomb/results/", build: 'GRCh37' }])
+        .add("recomb", ["RecombLZ", { url: apiBase + "annotation/recomb/results/", build: 'GRCh38' }])
         .add("access", ["TabixUrlSource", {
             // Corresponds to: https://www.diabetesepigenome.org/files/DFF044MQE/
             //   as processed from https://www.diabetesepigenome.org/annotations/DSR299XDW/
             // Islet of Langerhans / Chicago analysis, from CROCPOT
-            url_data: 'https://locuszoom.s3-us-west-2.amazonaws.com/DFF044MQE_sorted.bed.gz',
-            parser_func: dega_bed_parser,
+            // url_data: 'https://locuszoom.s3-us-west-2.amazonaws.com/DFF044MQE_sorted.bed.gz',
+            url_data: 'https://locuszoom.s3.us-west-1.amazonaws.com/BDNF.gz',
+            // url_data: 'https://s3-bucket.example/tabix-indexed-bgzip-file.gz',
+            // parser_func: dega_bed_parser,
+            parser_func: (line_of_text) => object_of_parsed_data_for_this_line,
             // We are fetching two elements, but only one of them is captured in the tabix index.
             // Fetching 25% extra data on each side can ensure that things near the edge are returned when we query.
-            overfetch: 0.25,
+            overfetch: 0.05,
         }])
         .add("gene", ["GeneLZ", { url: apiBase + "annotation/genes/", build: 'GRCh37' }])
-        .add("constraint", ["GeneConstraintLZ", { url: "https://gnomad.broadinstitute.org/api/", build: 'GRCh37' }]);
+        .add("constraint", ["GeneConstraintLZ", { url: "https://gnomad.broadinstitute.org/api/", build: 'GRCh38' }]);
 
     // Get the standard association plot layout from LocusZoom's built-in layouts
     var stateUrlMapping = { chr: "chrom", start: "start", end: "end", ldrefvar: 'ld_variant' };
